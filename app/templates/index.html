@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div id="overlay"
+  style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;">
+</div>
+<!-- Popup to provide random products -->
+<div id="popup"
+  style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: auto; background: white; border: 1px solid black; z-index: 1000; padding: 10px; box-sizing: border-box;">
+  <h2>Check out these products!</h2>
+  <!-- Card container -->
+  <div class="card-container" style="display: flex; flex-direction: row; justify-content: space-around;">
+    {% for product in random_products %}
+    <!-- only displays name and image -->
+    <div class="popup-card">
+      <div class="picture">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{product.name}} Image" width="200"
+          height="200" style="object-fit: contain;">
+      </div>
+      <a class="name" href="{{url_for('productView.productView', pid=product.pid)}} " style="word-break: normal;">
+        {{product.name}}
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  <button class="btn btn-secondary" style="display: block; margin: auto;" onclick="closePopup()">Close</button>
+  <label><input type="checkbox" id="dontShowAgain"> Don't show this to me again</label>
+</div>
+
+
+<!-- Forms for selecting sorting and filtering parameters -->
+<button onclick="clearLocalStorage()" style="border-color:lightgray; background-color:lightblue; margin-bottom:10px">Enable Popup</button>
+<div style="padding-left: 10px; padding-right: 10px;">
+  <h2>Products for Sale:</h2>
+  <div class="sorting">
+    <form method="GET" action="{{ url_for('index.index') }}">
+      <div class="d-flex" style="gap: 20px;">
+        <div>
+          <!-- Number of items displayed per page -->
+          <label for="pageSize">Items per Page:</label>
+          <input type="number" name="pageSize" value="{{ form.pageSize.data }}" size="32" min="1">
+        </div>
+        <div>
+          <!-- Sorting By -->
+          <label for="sortBy">Sort by:</label>
+          <select name="sortBy">
+            <option value="price" {% if form.sortBy.data=='price' %} selected {% endif %}>Price</option>
+            <option value="category" {% if form.sortBy.data=='category' %} selected {% endif %}>Category</option>
+            <option value="name" {% if form.sortBy.data=='name' %} selected {% endif %}>Name</option>
+          </select>
+        </div>
+        <div>
+          <!-- Categories Filter -->
+          <label for="categoryType">Filter by Category:</label>
+          <select name="categoryType">
+            {% for choice in form.categoryType.choices %}
+            <option value="{{ choice[0] }}" {% if form.categoryType.data==choice[0] %} selected {% endif %}>{{ choice[1]
+              }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <!-- Available Products Filter -->
+          <label for="available">Available Products Only:</label>
+          <input type="checkbox" name="available" value="{{ form.available.data }}" {% if form.available.data %} checked
+            {% endif %}>
+        </div>
+      </div>
+      <div class="d-flex" style="gap: 20px;">
+        <div>
+          <!-- Minimum Price setting -->
+          <label for="minPrice">Minimum Price:</label>
+          <input type="number" id="minPrice" name="minPrice" min="0.00" max="1000000.00" step="0.01"
+            value="{{ '%.2f' | format(form.minPrice.data) if form.minPrice.data != 0.0 else ''}}" style="width: 100px;"
+            onchange="updateMaxPriceMin(this.value)">
+        </div>
+        <div>
+          <!-- Maximum Price setting -->
+          <label for="maxPrice">Maximum Price:</label>
+          <input type="number" id="maxPrice" name="maxPrice" min="0.00" max="1000000.00" step="0.01"
+            value="{{ '%.2f' | format(form.maxPrice.data) if form.maxPrice.data != 1000000.0 else '' }}"
+            style="width: 100px;" onchange="updateMinPriceMax(this.value)">
+        </div>
+      </div>
+      <div class="d-flex" style="gap: 20px;">
+        <div>
+          <!-- Minimum Rating -->
+          <label for="minRating">Minimum Rating:</label>
+          <input type="number" id="minRating" name="minRating" min="0" max="5"
+            value="{{ form.minRating.data if form.minRating.data != 0 else '' }}" style="width: 100px;">
+        </div>
+        <div>
+          <!-- Search By Keyword filter -->
+          <label for="keyWord">Search By Keyword:</label>
+          <input type="text" name="keyWord" value="{{ form.keyWord.data }}" size="32">
+        </div>
+        <!-- Search By seller name filter -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <label for="seller-datalist">Seller Name:</label>
+          <input type="text" class="form-control" name="sellerName" list="list-sellers" id="seller-datalist"
+            style="width: 350px; border-color: darkgray;"
+            value="{{ form.sellerName.data if form.sellerName.data != '' else ''}}">
+          <datalist id="list-sellers">
+            {% for seller in sellers %}
+            <option value="{{ seller.firstname }} {{ seller.lastname }}">{{ seller.firstname }} {{ seller.lastname }}
+            </option>
+            {% endfor %}
+          </datalist>
+        </div>
+      </div>
+      <div>
+        <!-- Submission Button for filters -->
+        <input type="submit" value="Apply" class="btn btn-secondary">
+      </div>
+    </form>
+  </div>
+
+  <!-- HTML for individual product cards -->
+  <div class="card-container">
+    {% for product in products%}
+    {% if product.available == true %}
+    <div class="card">
+      <div class="picture">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{product.name}} Image" width="200"
+          height="200" style="object-fit: contain;">
+      </div>
+      <a class="name" href="{{url_for('productView.productView', pid=product.pid)}} " style="word-break: normal;">
+        {{product.name}}
+      </a>
+      <p class="price">${{'%0.2f'|format(product.unit_price|float)}}</p>
+      {% if product.rating == None %}
+      <p class="rating">Not rated</p>
+      {% else %}
+      <!-- Display star rating -->
+      <div class="star-rating">
+        {% for i in range(1, 6) %}
+        {% if i <= product.rating %} <span class="fa fa-star"></span>
+          {% elif i <= product.rating|round(1, 'floor' ) + 0.5 %} <span class="fa fa-star-half-o"></span>
+            {% else %}
+            <span class="fa fa-star-o"></span>
+            {% endif %}
+            {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <!-- if the product is unavailable, display a grayed out card -->
+    <div class="unavailable-card">
+      <div class="picture">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{product.name}} Image" width="200"
+          height="200" style="object-fit: contain;">
+      </div>
+      <a class="name" href="{{url_for('productView.productView', pid=product.pid)}} " style="word-break: normal;">
+        {{product.name}}
+      </a>
+      <p style="font-size: 17px; margin-bottom: auto; color: red">UNAVAILABLE</p>
+      {% if product.rating == None%}
+      <p class="rating">Not rated</p>
+      {% else %}
+      <!-- Display Star Rating -->
+      <div class="star-rating">
+        {% for i in range(1, 6) %}
+        {% if i <= product.rating %} <span class="fa fa-star"></span>
+          {% elif i <= product.rating|round(1, 'floor' ) + 0.5 %} <span class="fa fa-star-half-o"></span>
+            {% else %}
+            <span class="fa fa-star-o"></span>
+            {% endif %}
+            {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<br>
+<!-- Pagination controls -->
+<div style="display: flex; justify-content: center;">
+  <div id="pagination-container">
+    {{ pagination.links }}
+  </div>
+</div>
+
+<br><br>
+<!-- Pagination styling -->
+<style>
+  #pagination-container .pagination .active .page-link {
+    background-color: #f0f8ff;
+    color: black;
+  }
+
+  #pagination-container .pagination .page-link {
+    color: black;
+  }
+
+
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 10px;
+    padding: 20px;
+  }
+
+  .card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    width: 250px;
+    margin: 10px;
+    padding-top: 25px;
+    display: flex;
+    text-align: center;
+    word-wrap: break-word;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: arial;
+    min-height: 350px;
+  }
+
+  .popup-card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    width: 250px;
+    margin: 10px;
+    padding-top: 25px;
+    display: flex;
+    text-align: center;
+    word-wrap: break-word;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: arial;
+    min-height: 100px;
+  }
+
+  .unavailable-card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    width: 250px;
+    margin: 10px;
+    padding-top: 25px;
+    display: flex;
+    text-align: center;
+    word-wrap: break-word;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: arial;
+    min-height: 350px;
+    opacity: 0.5;
+
+  }
+
+  .name {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    padding: 0 10px;
+    margin-bottom: 30px;
+  }
+
+  .price {
+    color: grey;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: auto;
+  }
+
+  .rating {
+    color: grey;
+    font-size: 15px;
+    text-align: center;
+    margin-left: 10px;
+    margin-bottom: 10px;
+  }
+
+  .star-rating {
+    line-height: 32px;
+    font-size: 1.25em;
+  }
+
+  .star-rating .fa-star {
+    color: gold;
+  }
+
+  .star-rating .fa-star-half-o {
+    color: gold;
+  }
+
+  .cat {
+    font-size: 15px;
+    text-align: center;
+  }
+
+  .sorting {
+    display: flex;
+    justify-content: space;
+    gap: 10px;
+    flex-direction: row;
+  }
+</style>
+
+<!-- Script for live updating min and max price values -->
+<script>
+  function updateMinPriceMax(value) {
+    document.getElementById('minPrice').max = value;
+  }
+  function updateMaxPriceMin(value) {
+    document.getElementById('maxPrice').min = value;
+  }
+  document.getElementById('dontShowAgain').onchange = function() {
+    localStorage.setItem('dontShowPopup', this.checked);
+}
+
+  window.onload = function () {
+    if (localStorage.getItem('dontShowPopup') !== 'true' && window.location.href.indexOf('?') == -1) {
+      document.getElementById('popup').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+    }
+  }
+
+  function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+  }
+  function clearLocalStorage(){
+    localStorage.clear();
+  }
+</script>
+
+{% endblock %}

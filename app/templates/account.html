@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if current_user.is_authenticated %}
+<div style="padding-left: 10px; padding-right: 10px;">
+    <h2>Your Account</h2>
+    <br>
+    <strong><u>Name</u>:</strong> {{current_user.firstname}} {{current_user.lastname}}
+    <br>
+    <strong><u>Account Number</u>:</strong> {{current_user.id}}
+
+    <br><br>
+    <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="/balance">Your Balance</a>
+    
+    <br><br>
+    <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="/orders">Your Orders</a>
+    
+    <br><br>
+    <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="{{url_for('wishlist.wishlist', uid=current_user.id)}}">Your Wishlist</a>
+
+    <br><br>
+    <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="{{url_for('reviews.reviews', uid=-1)}}">View Public Profile</a>
+
+    <br><br>
+    <button class="btn btn-primary" style="background-color: black; color: white; border-color: black;" onclick=window.location.href="{{url_for('account.edit_profile')}}">Edit Profile Information</button>
+    
+    <br><br>
+    <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="{{url_for('account.change_password')}}">Change Password</a>
+</div>
+
+</div>
+{% else %}
+<p><a href="{{ url_for('users.login') }}">Log in</a> to your account!</p>
+
+{% endif %}
+
+{% endblock %}

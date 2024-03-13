@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="/account">Cancel</a>
+<br><br>
+<div style="padding-left: 10px; padding-right: 10px; padding-bottom: 20px">
+    <div id="edit-form">
+        <h3>Edit Your Information</h3>
+        <form action="{{ url_for('account.edit_profile') }}" method="POST">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.firstname.label }}<br/>
+                {{ form.firstname(size=32) }}<br/>
+                {% for error in form.firstname.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.lastname.label }}<br/>
+                {{ form.lastname(size=32) }}<br/>
+                {% for error in form.lastname.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.email.label }}<br/>
+                {{ form.email(size=64) }}<br/>
+                {% for error in form.email.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.address.label }}<br/>
+                {{ form.address(size=32) }}<br/>
+                {% for error in form.address.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.submit() }}
+            </p>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}

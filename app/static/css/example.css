@@ -1,0 +1,86 @@
+section {
+color: #fff;
+text-align: center;
+}
+
+.container {
+display: table;
+width: 100%;
+}
+
+.left-half {
+background-color: #ff9e2c;
+position: absolute;
+left: 0px;
+width: 50%;
+}
+
+.right-half {
+background-color: #b6701e;
+position: absolute;
+right: 0px;
+width: 50%;
+}
+
+.star-rating {
+  font-size: 0;
+}
+
+.star-rating i {
+  font-size: 24px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.star-rating i:hover,
+.star-rating i.hover {
+  color: #ffcc00;
+}
+
+tab {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: white;
+  padding: 8px 0;
+}
+
+.tab button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tab button:hover {
+  text-decoration: underline;
+}
+
+.small-break {
+  margin-top: 10px;
+}
+
+.overall-rating {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.pagination-container {
+  position: absolute;
+  bottom: 50px;
+  right: 10px;
+}
+
+  .thumb-up, .thumb-down {
+    cursor: pointer;
+  }
+
+  .thumb-up.clicked {
+    color: green; /* Change this color as desired */
+  }
+
+  .thumb-down.clicked {
+    color: red; /* Change this color as desired */
+  }
+
+
+

@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if current_user.is_authenticated %}
+<div style="padding-left: 10px; padding-right: 10px; padding-bottom: 20px">
+  <h2>Orders</h2>
+
+  <!-- Tab Buttons -->
+  <div class="tab" style="margin-left: -5px;">
+    <button class="tablinks" data-page="{{ unful_pagination.page }}" onclick="openTab(event, 'unfulfilled')">Unfulfilled ({{unful_pagination.total}})</button>
+    <span>|</span>
+    <button class="tablinks" data-page="{{ ful_pagination.page }}" onclick="openTab(event, 'fulfilled')">Fulfilled ({{ful_pagination.total}})</button>
+    <span>|</span>
+    <button class="tablinks" onclick="openTab(event, 'analytics')">My Analytics</button>
+  </div>
+  <br>
+  <div id="unfulfilled" class="tabcontent">
+    <div class="sorting">
+      <form method="GET" action="{{ url_for('orders.user_order_history') }}">
+        <div class="d-flex" style="gap: 20px;">
+            <label for="unful_name">Search By Keyword:</label>
+            <input type="text" name="unful_name" value="{{ unful_form.unful_name.data }}" size="32">
+        </div>
+        <input type="submit" value="Apply" class="btn btn-secondary">
+      </form>
+    </div>
+    <!-- HTML for individual inventory cards -->
+    <div class="card-container">
+      {% for order in unful_orderID_items %}
+          <div class="card">
+              <div class="text">
+                  <div style="float: left">
+                      <h3>{{order.firstname}} {{order.lastname}}</h3>
+                      <p>{{order.address}} <br> Ordered {{order.order_date}}</p>
+                  </div>
+              </div>    
+          {% for item in unful_orderID_items[order] %}
+              <div class="text">
+                  <div class="pos-right">
+                      <div class="picture">
+                        <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{item.name}} Image" width="200" height="200" style="object-fit: contain;">
+                      </div>
+                      <div style="display: flex; gap: 60px; width: 480px;">
+                          <p><strong>{{item.p_name}}</strong> <br> 
+                              Quantity: {{item.quantity}}
+                              {% if item.fulfillment_status == True %}
+                              <br>Fulfillment Date: {{item.fulfillment_date}}
+                              {% endif %}
+                          </p>
+                          <div style="height: 25px;">
+                            {% if item.fulfillment_status %}
+                            <a class="btn btn-primary" style="background-color: white; color: black; border-color: black; float: right; margin-right: 10px; pointer-events: none;;">Fulfilled</a>
+                            {% else %}
+                              <a href="{{ url_for('orders.mark_line_item', order_id=order.order_id, pid=item.pid, seller_id=current_user.id)}}" class="btn btn-primary" style="background-color: black; color: white; border-color: black; float: right; margin-right: 10px">Mark as Fulfilled</a>
+                            {% endif %}
+                          </div>
+                        </div>
+                  </div>
+              </div>
+          {% endfor %}
+          </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination controls -->
+    <div style="display: flex; justify-content: center;">
+      <div id="pagination-container">
+        {{ unful_pagination.links }}
+      </div>
+    </div>
+
+    <!-- Pagination styling -->
+    <style>
+      #pagination-container .pagination .active .page-link {
+        background-color: #f0f8ff;
+        color: black; /* Change the text color to white for better contrast */
+      }
+
+      #pagination-container .pagination .page-link {
+        color: black; /* Change the text color to white for better contrast */
+      }
+
+      .card-container {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        align-content: flex-start;
+        gap: 10px;
+        padding: 20px;
+      }
+
+      .card {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        width: 690px;
+        margin: 10px;
+        padding-top: 10px;
+        text-align: left;
+        word-wrap: break-word;
+        flex-direction: column;
+        justify-content: space-between;
+        font-family: arial;
+      }
+
+      .text {
+          margin-left: 25px;
+      }
+
+      .pos-right {
+          width: 600px;
+      }
+
+      .picture {
+          float: left;
+          margin-right: 20px;
+          margin-bottom: 10px;
+      }
+
+    </style>
+  </div>
+
+  <div id="fulfilled" class="tabcontent" style="display: none;">
+    <div class="sorting">
+      <form method="GET" action="{{ url_for('orders.user_order_history') }}">
+        <div class="d-flex" style="gap: 20px;">
+            <label for="ful_name">Search By Keyword:</label>
+            <input type="text" name="ful_name" value="{{ ful_form.ful_name.data }}" size="32">
+        </div>
+        <input type="submit" value="Apply" class="btn btn-secondary">
+      </form>
+    </div>
+    <!-- HTML for individual inventory cards -->
+    <div class="card-container">
+      {% for order in ful_orderID_items %}
+          <div class="card">
+              <div class="text">
+                  <div style="float: left">
+                      <h3>{{order.firstname}} {{order.lastname}}</h3>
+                      <p>{{order.address}} <br> Ordered {{order.order_date}}</p>
+                  </div>
+              </div>    
+          {% for item in ful_orderID_items[order] %}
+              <div class="text">
+                  <div class="pos-right">
+                      <div class="picture">
+                        <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{item.name}} Image" width="200" height="200" style="object-fit: contain;">
+                      </div>
+                      <div>
+                          <p><strong>{{item.p_name}}</strong> <br> 
+                              Quantity: {{item.quantity}}
+                              <br>Fulfillment Date: {{item.fulfillment_date}}
+                          </p>
+                      </div>
+                  </div>
+              </div>
+          {% endfor %}
+          </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination controls -->
+    <div style="display: flex; justify-content: center;">
+      <div id="pagination-container">
+        {{ ful_pagination.links }}
+      </div>
+    </div>
+
+    <!-- Pagination styling -->
+    <style>
+      #pagination-container .pagination .active .page-link {
+        background-color: #f0f8ff;
+        color: black; /* Change the text color to white for better contrast */
+      }
+
+      #pagination-container .pagination .page-link {
+        color: black; /* Change the text color to white for better contrast */
+      }
+
+      .card-container {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        align-content: flex-start;
+        gap: 10px;
+        padding: 20px;
+      }
+
+      .card {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        width: 1000px;
+        margin: 10px;
+        padding-top: 10px;
+        text-align: left;
+        word-wrap: break-word;
+        flex-direction: column;
+        justify-content: space-between;
+        font-family: arial;
+      }
+
+      .text {
+          margin-left: 25px;
+      }
+
+      .pos-right {
+          width: 700px;
+      }
+
+      .picture {
+          float: left;
+          margin-right: 20px;
+          margin-bottom: 10px;
+      }
+
+    </style>
+  </div>
+</div>
+
+<div id="analytics" class="tabcontent" style="display: none;">
+  <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 70vh;">
+    <canvas id="myChart"></canvas>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    const ctx = document.getElementById('myChart');
+    const salesData = {{ sales | tojson | safe }};  // Convert sales data to JSON
+  
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Nov', 'Dec'],
+        datasets: [{
+          label: 'Monthly Sales',
+          data: salesData,
+          borderWidth: 1,
+          pointRadius: 3 // Set a fixed point radius for all data points
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>
+
+  <br><br>
+
+  <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 70vh;">
+    <canvas id="myChart2"></canvas>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    const ctx2 = document.getElementById('myChart2');
+    const item_Data = {{ unique_items | tojson | safe }};
+  
+    new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        //['2018', '2019', '2020', '2021', '2022', '2023']
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Nov', 'Dec'],
+        datasets: [{
+          label: '# of Unique Products',
+          data: item_Data,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>
+</div>
+
+<br>
+{% else %}
+
+<p><a href="{{ url_for('users.login') }}">Log in</a> to see your order history!</p>
+{% endif %}
+
+<script>
+  function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    
+    // Hide all tab content
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    
+    // Remove the "active" class from all tab buttons
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    
+    // Show the selected tab content
+    document.getElementById(tabName).style.display = "block";
+    
+    // Add the "active" class to the clicked tab button
+    evt.currentTarget.className += " active";
+
+    // Store the current tab in local storage
+    localStorage.setItem('activeTab', tabName);
+  }
+
+  window.onload = function() {
+    // Get the active tab from local storage
+    var activeTab = localStorage.getItem('activeTab');
+
+    // If there is no active tab in local storage, set "purchases" as the default tab
+    if (activeTab === null) {
+      activeTab = "unfulfilled";
+    }
+
+    // Set the active tab
+    document.getElementById(activeTab).style.display = "block";
+
+    // Set the active class to the correct tab button
+    var tablinks = document.getElementsByClassName("tablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].getAttribute('onclick').includes(activeTab)) {
+        tablinks[i].className += " active";
+      }
+    }
+
+    // Hide "Unfulfilled" tab content when other tabs are active
+    if (activeTab !== "unfulfilled") {
+      document.getElementById("unfulfilled").style.display = "none";
+    }
+  }
+</script>
+{% endblock %}
+

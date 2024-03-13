@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="padding-left: 10px; padding-right: 10px; padding-bottom: 20px">
+  {% if current_user.is_authenticated %}
+  <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="/inventory">Cancel</a>
+  <br><br>
+  <h2>Add Product</h2>
+    <div class="d-flex" style="gap: 20px;"> 
+    </div>
+
+    <div class="card-container">
+        <div class="card">
+          <div class="text">
+            <h4>Product Details</h4>
+            <form action="{{ url_for('inventory.add_new_product_to_inventory') }}" method="POST" enctype="multipart/form-data">
+              <fieldset>
+                <!-- upload image -->
+                <div>
+                    <label for="image">Upload Image:</label>
+                    <input type="file" id="image" name="image" accept="image/jpg" required>
+
+                <!-- adjust product name -->
+                <div>
+                    <label for="product_name">Product Name:</label>
+                    <textarea id="product_name" name="product_name" rows="2" cols="60" maxlength="1000" required></textarea>
+                  </div>
+                
+                <!-- adjust quantity -->
+                <div class="add_quantity">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="q" name="quantity" placeholder="0" min="1" style="width: 80px;" required>
+                </div>
+                
+                <!-- adjust unit price -->
+                <div class="add_price">
+                    <label for="unit_price">Unit Price ($):</label>
+                    <input type="number" id="p" name="unit_price" placeholder="0.00" min="0.01" step="0.01" onchange="(function(el){el.value=parseFloat(el.value).toFixed(2);})(this)" style="width: 80px;" required step="0.01">
+                </div>
+
+                <!-- adjust description -->
+                <div>
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" rows="10" cols="60" maxlength="100000" required></textarea>
+                  </div>
+
+                <!-- adjust category -->
+                <div>
+                    <label for="category">Category:</label>
+                    <select name="category" id="c" required>
+                      {% for category in categories %}
+                      <option value="{{ category.name }}">{{ category.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+              </fieldset>
+              <button type="submit" style="background-color: black; color: white; cursor: pointer; border-radius: 30px; padding: 5px 10px; float: right; margin-right: 15px">Add to Inventory</button>
+            </form>
+          </div>
+        </div>
+    </div>
+
+  {% else %}
+  
+  <!-- if not logged in, ask user to log in -->
+  <p><a href="{{ url_for('users.login') }}">Log in</a> to add an inventory item!</p>
+  {% endif %}
+  
+  <style>
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: column;
+      align-content: flex-start;
+      margin-top: 15px;
+    }
+
+    .card {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      width: 800px;
+      padding-top: 10px;
+      text-align: left;
+      word-wrap: break-word;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: arial;
+    }
+
+    .text {
+        margin-left: 20px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+    }
+
+    label {
+    display: inline-block;
+    width: 120px;
+    margin-right: 0px;
+    text-align:left;
+    margin-left: -138px;
+    }
+
+    fieldset {
+    border:none;
+    width:500px;
+    margin:0px auto;
+    }
+    
+    textarea {
+      vertical-align: top;
+      margin-bottom: 5px;
+    }
+
+    .form-control {
+      margin-left: -13px;
+      margin-top: -35px;
+      margin-bottom: -10px;
+      border: 1px solid #696969;
+    }
+  </style>
+</div>
+
+
+{% endblock %}
+

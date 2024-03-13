@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div style="padding-left: 10px;">
+
+  <!-- If there are items available in wishlist -->
+  {% if items|length != 0 %}
+  {% if current_user.is_authenticated and current_user.id == wishlistuid %}
+  <!-- If you are the user, provide back to account button and delete wishlist button -->
+  <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="/account">Back to
+    Account</a>
+  <br><br>
+  <form action="{{ url_for('wishlist.wishlist_delete_all', uid=current_user.id)}}" method="POST">
+    <button type="submit"
+      style="background-color: white; color: red; border: none; padding: 2px; text-decoration: underline; cursor: pointer; margin-bottom: auto;">Clear
+      Wishlist</button>
+  </form>
+  {% else %}
+  <!-- Otherwise, show button to take you back to user's profile -->
+  <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;"
+    href="{{url_for('reviews.reviews', uid=wishlistuid)}}">Back to Profile</a>
+  {% endif %}
+
+  <br><br>
+  <h2>
+    {% if current_user.is_authenticated and current_user.id == wishlistuid %}
+    Your wishlist:
+    {% else %}
+    {{ name }}'s wishlist:
+    {% endif %}
+  </h2>
+
+  <!-- Listing all items in wishlist -->
+  <div class="card-container">
+    {% for product in items %}
+    <div class="card">
+      <div class="picture">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{product.name}} Image" width="200"
+          height="200" style="object-fit: contain;">
+      </div>
+      <a class="name" href="{{url_for('productView.productView', pid=product.pid)}} " style="word-break: normal;">
+        {{product.name}}
+      </a>
+      <!-- if you are wishlist user, option to remove specific items -->
+      {% if current_user.is_authenticated and current_user.id == wishlistuid %}
+      <form action="{{ url_for('wishlist.wishlist_delete', pid=product.pid, uid=current_user.id, )}}" method="POST">
+        <button type="submit"
+          style="background-color: white; color: red; border: none; padding: 2px; text-decoration: underline; cursor: pointer; margin-bottom: auto;">Remove
+          from Wishlist</button>
+      </form>
+      {% endif %}
+      <p class="added">Added {{humanize_time(product.time_added)}}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<!-- Display if there is nothing in wishlist -->
+{% if current_user.is_authenticated and current_user.id == wishlistuid %}
+<p>Your wishlist is currently empty. Click
+  <a href="{{ url_for('index.index') }}">here</a>
+  to start shopping!
+</p>
+{% else %}
+<p>{{ name }}'s wishlist is empty.</p>
+<a class="btn btn-primary" style="background-color: black; color: white; border-color: black;"
+  href="{{url_for('reviews.reviews', uid=wishlistuid)}}">Back
+  to Profile</a>
+{% endif %}
+{% endif %}
+
+<br>
+<!-- Pagination controls -->
+<div style="display: flex; justify-content: center;">
+  <div id="pagination-container">
+    {{ pagination.links }}
+  </div>
+</div>
+
+<br><br>
+</div>
+<!-- Pagination styling -->
+<style>
+  #pagination-container .pagination .active .page-link {
+    background-color: #f0f8ff;
+    color: black;
+  }
+
+  #pagination-container .pagination .page-link {
+    color: black;
+  }
+
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 10px;
+    padding: 20px;
+  }
+
+  .card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    width: 250px;
+    margin: 10px;
+    padding-top: 25px;
+    text-align: center;
+    word-wrap: break-word;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: arial;
+    min-height: 350px;
+  }
+
+  .name {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    padding: 0 10px;
+    margin-bottom: 30px;
+  }
+
+  .added {
+    color: grey;
+    font-size: 15px;
+    text-align: center;
+    margin-left: 10px;
+    margin-bottom: 10px;
+  }
+</style>
+{% endblock %}

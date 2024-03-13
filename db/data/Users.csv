@@ -1,0 +1,3 @@
+1,icecream@tastes.good,pbkdf2:sha256:260000$1GvmeoAkcWb89TyU$5f711eafb243c1c1a884715dd9bd6d185f29ccd3dab59ad19cc201a7260091cb,Joey,Shmoey,981 Cone Ave, False
+2,database@db.com,pbkdf2:sha256:600000$MboOEvbaCQsfMPpz$fcfe7856516a87e9624b540a7cae1656911219c646315247303ba68e6df5eff3,Sally,Jones,420 Chapel Dr, True
+3,connie@xu.com,pbkdf2:sha256:600000$mtSlKjWO5W9V617g$a73a2dbd38ffb7965dcb76d36f5460e830a4904689a686487950cd343421b4e4,Tonyny,DaBoi,alien avenue, True

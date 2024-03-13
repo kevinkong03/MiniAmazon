@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 0 10px;">
+  <h2>Public Profile</h2>
+
+  <!-- User Name -->
+  <div class="d-flex justify-content-between">
+    <div class="user_info">
+      {{user.firstname}} {{user.lastname}} #{{user.id}}
+      {% if user.is_seller == True %}
+        <br>
+        {{user.address}}
+        <br>
+        {{user.email}}
+      {% endif %}
+      <br><br>
+      <a class="btn btn-primary" style="background-color: white; color: black; border-color: black;" href="{{url_for('wishlist.wishlist', uid=user.id)}}">View Wishlist</a>
+    </div>
+    {% if current_user.is_authenticated and purchased_from_seller_before == True %}
+      {% if seller_rated_before == False and user.id != current_user.id %}
+        <div class="review-button-container">
+          <a href="{{ url_for('write_reviews.write_reviews', uid=user.id) }}" class="btn btn-primary" style="background-color: black; color: white; border-color: black; height: 40px;">Add Review</a>
+        </div>
+      {% endif %}
+      {% if seller_rated_before == True and user.id != current_user.id %}
+        <div class="review-button-container">
+          <a href="{{ url_for('edit_seller_review.edit_seller_review', seller_id=user.id, uid = current_user.id) }}" class="btn btn-primary" style="background-color: black; color: white; border-color: black; height: 40px;">Edit Review</a>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <br><br>
+
+  <h4>Reviews: </h4>
+  <!-- Tab Buttons -->
+  <form method="GET" action="{{ url_for('reviews.reviews', uid=user.id) }}">
+    <p>
+        <label for="sortBy">Sort Order:</label>
+        <select name="sortBy" id="sortOrder" onchange="this.form.submit()">
+            <option value="time" {% if form.sortBy.data == 'time' %} selected {% endif %}>Most Recent</option>
+            <option value="upvotes" {% if form.sortBy.data == 'upvotes' %} selected {% endif %}>Highest Upvotes</option>
+        </select>
+    </p>
+    <input type="submit" value="Apply" class="btn btn-secondary" style="display: none;">
+  </form>
+  <div class="tab" style="margin-left: -5px;">
+    <button class="tablinks" data-page="{{ ProductPagination.page }}" onclick="openTab(event, 'purchases')">Purchases ({{ProductPagination.total}})</button>
+    <span>|</span>
+    <button class="tablinks" data-page="{{ SellerPagination.page }}" onclick="openTab(event, 'seller')">Sellers ({{SellerPagination.total}})</button>
+    {% if user.is_seller == True %}
+      <span>|</span>
+      <button class="tablinks" data-page="{{ MyProductPagination.page }}" onclick="openTab(event, 'myproduct')">My Products ({{MyProductPagination.total}})</button>
+      <span>|</span>
+      <button class="tablinks" data-page="{{ MyPagination.page }}" onclick="openTab(event, 'myreview')">My Reviews ({{MyPagination.total}})</button>
+    {% endif %}
+  </div>
+
+  <br>
+
+  <!-- Content for Each Tab -->
+  <div id="purchases" class="tabcontent">
+    <!-- Content for the "Purchases" tab goes here -->
+    <table class="table table-hover table-bordered container">
+      <thead class="thead-dark">
+        <h5>Average Rating: {{'%0.2f'|format(purchase_average_rating|float)}}</h5>
+        <tr>
+          <th scope="col">Title</th>
+          <th scope="col">Product</th>
+          <th scope="col">Rating</th>
+          <th scope="col">Message</th>
+          <th scope="col">Time Stamp</th>
+          <th scope="col">Upvote Count</th>
+          <th scope="col"></th>
+          <th scope="col"></th>
+          {% if personal == True %}
+          <th scope="col"></th> 
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for review in avail_product_reviews %}
+          <tr>
+            <th scope="row">{{ review.title }}</th>
+            <td class="product_name">
+              <a href="{{ url_for('productView.productView', pid=review.product_id) }}">
+                  {{review.p_name }}
+              </a>
+            </td>
+            <td>{{ review.rating }}</td>
+            <td>{{ review.message }}</td>
+            <td>{{ review.timestamp}}</td>
+            <td class="upvote-count">{{ review.upvote_count }}</td>
+            <!-- Inside the loop where you display reviews -->
+            <td>
+              <span class="thumb-up">
+                <i class="fa fa-thumbs-up"></i>
+              </span>
+            </td>
+            <td>
+              <span class="thumb-down">
+                <i class="fa fa-thumbs-down"></i>
+              </span>
+            </td>
+            {% if personal %}
+            <td>
+              <a href="{{ url_for('edit_review.edit_review', uid=user.id, pid=review.product_id) }}" class="btn btn-primary" style="background-color: black; color: white; border-color: black; height: 40px;">Edit</a>
+            </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>      
+    </table>
+
+    <br>
+  
+    <!-- Pagination controls -->
+
+    <div style="display: flex; justify-content: center;">
+      <div id="pagination-container-product" class="pagination">
+        {% if ProductPagination.page != 1 %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, product_page=ProductPagination.page-1,sortBy=form.sortBy.data) }}">←</a>
+        {% endif %}
+        {% for page_num in range(1, ProductPagination.total_pages + 1) %}
+          <a class="page-link {% if page_num == ProductPagination.page %}active{% endif %}" href="{{ url_for('reviews.reviews', uid=user.id, product_page=page_num,sortBy=form.sortBy.data) }}">{{ page_num }}</a>
+        {% endfor %}
+        {% if ProductPagination.page != ProductPagination.total_pages %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, product_page=ProductPagination.page+1,sortBy=form.sortBy.data) }}">→</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Pagination styling -->
+    <style>
+      #pagination-container .pagination .active .page-link {
+        background-color: #f0f8ff;
+        color: black; /* Change the text color to white for better contrast */
+      }
+      #pagination-container .pagination .page-link {
+        color: black; /* Change the text color to white for better contrast */
+      }
+    </style>
+    
+    <br> 
+  </div>
+
+  <div id="seller" class="tabcontent" style="display: none;">
+    <!-- Content for the "Sellers" tab goes here -->
+    <table class="table table-hover table-bordered container">
+      <thead class="thead-dark">
+        <h5>Average Rating: {{'%0.2f'|format(seller_average_rating|float)}}</h5>
+        <tr>
+          <th scope="col">Title</th>
+          <th scope="col">Seller Name</th>
+          <th scope="col">Rating</th>
+          <th scope="col">Message</th>
+          <th scope="col">Time Stamp</th>
+          <th scope="col">Upvote Count</th>
+          <th></th> 
+          <th></th> 
+          {% if personal == True %}
+          <th></th> 
+          {% endif %}
+          
+        </tr>
+      </thead>
+      <tbody>
+        {% for review in avail_seller_reviews %}
+          <tr>
+            <th scope="row">{{ review.title }}</th>
+            <td class="seller_name">
+              <a href="{{ url_for('reviews.reviews', uid=review.seller_id) }}">
+                  {{ get_name(review.seller_id) }}
+              </a>
+            </td>
+            <td>{{ review.rating }}</td>
+            <td>{{ review.message }}</td>
+            <td>{{ review.timestamp }}</td>
+            <td class="upvote-count">{{ review.upvote_count }}</td>
+            <!-- Inside the loop where you display seller reviews -->
+            <td>
+            <span class="thumb-up">
+              <i class="fa fa-thumbs-up"></i>
+            </span>
+            </td>
+            <td>
+              <span class="thumb-down">
+                <i class="fa fa-thumbs-down"></i>
+              </span>
+            </td>
+            {% if personal == True %}
+            <td>
+              <a href="{{ url_for('edit_seller_review.edit_seller_review', seller_id=review.seller_id,uid=user.id) }}" class="btn btn-primary" style="background-color: black; color: white; border-color: black; height: 40px;">Edit</a>
+            </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <br>
+  
+    <!-- Pagination controls -->
+    <div style="display: flex; justify-content: center;">
+      <div id="pagination-container-seller" class="pagination">
+        {% if SellerPagination.page != 1 %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, tab = 'seller', seller_page=SellerPagination.page-1,sortBy=form.sortBy.data) }}">←</a>
+        {% endif %}
+        {% for page_num in range(1, SellerPagination.total_pages + 1) %}
+          <a class="page-link {% if page_num == SellerPagination.page %}active{% endif %}" href="{{ url_for('reviews.reviews', uid=user.id, seller_page=page_num,sortBy=form.sortBy.data) }}">{{ page_num }}</a>
+        {% endfor %}
+        {% if SellerPagination.page != SellerPagination.total_pages %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, seller_page=SellerPagination.page+1,sortBy=form.sortBy.data) }}">→</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+
+  <div id="myproduct" class="tabcontent" style="display: none;">
+    <!-- Content for the "My Product" tab goes here -->
+    <table class="table table-hover table-bordered container">
+      <thead class="thead-dark">
+        <h5>Average Rating: {{'%0.2f'|format(product_average_rating|float)}}</h5>
+        <tr>
+          <th scope="col">Title</th>
+          <th scope="col">Product Name</th>
+          <th scope="col">Buyer Name</th>
+          <th scope="col">Rating</th>
+          <th scope="col">Message</th>
+          <th scope="col">Upvote Count</th>
+          <th scope="col">Time Stamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for review in avail_my_product_reviews %}
+          <tr>
+            <th scope="row">{{ review.title }}</th>
+            <td class="pname">
+              <a href="{{ url_for('productView.productView', pid=review.product_id) }}">
+                {{review.p_name }}
+              </a>
+            </td>
+            <td>{{ review.buyer_id }}</td>
+            <td>{{ review.rating }}</td>
+            <td>{{ review.message }}</td>
+            <td class="upvote-count">{{ review.upvote_count }}</td>
+            <td>{{ review.timestamp }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <br>
+  
+    <!-- Pagination controls -->
+    <div style="display: flex; justify-content: center;">
+      <div id="pagination-container-my-product" class="pagination">
+        {% if MyProductPagination.page != 1 %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, my_product_page=MyProductPagination.page-1,sortBy=form.sortBy.data) }}">←</a>
+        {% endif %}
+        {% for page_num in range(1, MyProductPagination.total_pages + 1) %}
+          <a class="page-link {% if page_num == MyProductPagination.page %}active{% endif %}" href="{{ url_for('reviews.reviews', uid=user.id, my_product_page=page_num,sortBy=form.sortBy.data) }}">{{ page_num }}</a>
+        {% endfor %}
+        {% if MyProductPagination.page != MyProductPagination.total_pages %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, my_product_page=MyProductPagination.page+1,sortBy=form.sortBy.data) }}">→</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div id="myreview" class="tabcontent" style="display: none;">
+    <!-- Content for the "My Review" tab goes here -->
+    <table class="table table-hover table-bordered container">
+      <thead class="thead-dark">
+        <h5>Average Rating: {{'%0.2f'|format(my_average_rating|float)}}</h5>
+        <tr>
+          <th scope="col">Title</th>
+          <th scope="col">Buyer Name</th>
+          <th scope="col">Rating</th>
+          <th scope="col">Message</th>
+          <th scope="col">Upvote Count</th>
+          <th scope="col">Time Stamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for review in avail_my_reviews %}
+          <tr>
+            <th scope="row">{{ review.title }}</th>
+            <td>
+              <a href="{{ url_for('reviews.reviews', uid=review.buyer_id) }}">
+                {{ get_name(review.buyer_id) }}
+              </a>
+            </td>
+            <td>{{ review.rating }}</td>
+            <td>{{ review.message }}</td>
+            <td>{{ review.upvote_count }}</td>
+            <td>{{ review.timestamp }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <br>
+
+    <!-- Pagination controls -->
+    <div style="display: flex; justify-content: center;">
+      <div id="pagination-container-my" class="pagination">
+        {% if MyPagination.page != 1 %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, my_page=MyPagination.page-1,sortBy=form.sortBy.data) }}">←</a>
+        {% endif %}
+        {% for page_num in range(1, MyPagination.total_pages + 1) %}
+          <a class="page-link {% if page_num == MyPagination.page %}active{% endif %}" href="{{ url_for('reviews.reviews', uid=user.id, my_page=page_num,sortBy=form.sortBy.data) }}">{{ page_num }}</a>
+        {% endfor %}
+        {% if MyPagination.page != MyPagination.total_pages %}
+          <a class="page-link" href="{{ url_for('reviews.reviews', uid=user.id, my_page=MyPagination.page+1,sortBy=form.sortBy.data) }}">→</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>  
+</div>
+
+<br><br>
+
+<script>
+  function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+
+    // Hide all tab content
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+
+    // Remove the "active" class from all tab buttons
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].classList.remove("active");
+    }
+
+    // Show the selected tab content
+    document.getElementById(tabName).style.display = "block";
+
+    // Add the "active" class to the clicked tab button
+    evt.currentTarget.classList.add("active");
+
+    // Store the current tab in local storage
+    localStorage.setItem("activeTab", tabName);
+  }
+
+  window.onload = function () {
+    // Get the active tab from local storage
+    var activeTab = localStorage.getItem("activeTab");
+
+    // If there is no active tab in local storage, set "purchases" as the default tab
+    if (activeTab === null) {
+      activeTab = "purchases";
+    }
+
+    // Set the active tab
+    document.getElementById(activeTab).style.display = "block";
+
+    // Set the active class to the correct tab button
+    var tablinks = document.getElementsByClassName("tablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].getAttribute("onclick").includes(activeTab)) {
+        tablinks[i].classList.add("active");
+      }
+    }
+       // Hide "Purchases" tab content when other tabs are active
+      if (activeTab !== "purchases") {
+      document.getElementById("purchases").style.display = "none";
+    }
+  };
+
+  async function handleUpvoteClick(element, action) {
+  try {
+    const row = element.closest('tr');
+    const pname = row.querySelector('td:nth-child(2)').textContent;
+    const upvoteCountElement = row.querySelector('.upvote-count');
+    let upvoteCount = parseInt(upvoteCountElement.innerText);
+    let headers = document.querySelectorAll('th[scope="col"]');
+    let reviewType = headers[1].textContent;
+    const uid = '{{ current_user.id }}';
+
+    let thumbType, oppositeThumbType;
+
+    if (action === 'up') {
+      thumbType = 'thumb-up';
+      oppositeThumbType = 'thumb-down';
+    } else {
+      thumbType = 'thumb-down';
+      oppositeThumbType = 'thumb-up';
+    }
+
+    // Clear opposite thumb
+    const oppositeThumb = row.querySelector(`.${oppositeThumbType}`);
+    if (oppositeThumb.classList.contains('clicked')) {
+      oppositeThumb.classList.remove('clicked');
+      oppositeThumb.style.color = '';
+      console.log('check0', thumbType, oppositeThumbType, upvoteCount);
+      if (oppositeThumbType === 'thumb-up') {
+        upvoteCount -= 1;
+      } else if (oppositeThumbType === 'thumb-down') {
+        upvoteCount += 1;
+        console.log('check0.5', upvoteCount);
+      }
+    }
+
+    // Toggle the color and upvote count for the clicked thumb
+    if (element.classList.contains('clicked')) {
+      element.classList.remove('clicked');
+      element.style.color = '';
+      if(thumbType === 'thumb-up'){
+        upvoteCount -= 1;
+      }else{
+        upvoteCount += 1;
+      }
+      console.log('check1', upvoteCount);
+    } else {
+      element.classList.add('clicked');
+      element.style.color = action === 'up' ? 'green' : 'red';
+      if(thumbType === 'thumb-up'){
+        upvoteCount += 1;
+      }else{
+        upvoteCount -= 1;
+      }
+      console.log('check2', upvoteCount);
+    }
+
+    upvoteCountElement.innerText = upvoteCount.toString();
+    console.log('check3', upvoteCount);
+
+    // Save thumb state to localStorage
+    localStorage.setItem(`ifToggled_${thumbType}_${pname}`, element.classList.contains('clicked') ? 1 : 0);
+    localStorage.setItem(`thumbColor_${thumbType}_${pname}`, element.style.color);
+    localStorage.setItem(`upvoteCount_${pname}`, upvoteCount);
+
+
+    // Clear opposite thumb state from localStorage
+    localStorage.removeItem(`ifToggled_${oppositeThumbType}_${pname}`);
+    localStorage.removeItem(`thumbColor_${oppositeThumbType}_${pname}`);
+    console.log('check4', oppositeThumbType);
+    // Generate the base URL
+    const baseUrl = reviewType === 'Product'
+      ? '{{ url_for("reviews.update_upvote") }}'
+      : '{{ url_for("reviews.update_seller_upvote") }}';
+
+    // Make the fetch request
+    const response = await fetch(baseUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        uid: uid,
+        pname: pname,
+        upvoteCount: upvoteCount,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    // Handle the response here
+    const data = await response.json();
+    console.log(data);
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const thumbUpIcons = document.querySelectorAll('.thumb-up');
+  const thumbDownIcons = document.querySelectorAll('.thumb-down');
+
+  thumbUpIcons.forEach((thumbUpIcon) => {
+    const ifToggled = parseInt(localStorage.getItem(`ifToggled_thumb-up_${thumbUpIcon.closest('tr').querySelector('td:nth-child(2)').textContent}`)) || 0;
+    const thumbColor = localStorage.getItem(`thumbColor_thumb-up_${thumbUpIcon.closest('tr').querySelector('td:nth-child(2)').textContent}`) || 'black';
+
+    if (ifToggled === 1) {
+      thumbUpIcon.classList.add('clicked');
+    }
+    thumbUpIcon.style.color = thumbColor;
+
+    // Retrieve upvote count from localStorage and update the UI
+    const savedUpvoteCount = localStorage.getItem(`upvoteCount_${thumbUpIcon.closest('tr').querySelector('td:nth-child(2)').textContent}`);
+    if (savedUpvoteCount !== null) {
+      thumbUpIcon.closest('tr').querySelector('.upvote-count').innerText = savedUpvoteCount;
+    }
+  });
+
+  thumbDownIcons.forEach((thumbDownIcon) => {
+    const ifToggled = parseInt(localStorage.getItem(`ifToggled_thumb-down_${thumbDownIcon.closest('tr').querySelector('td:nth-child(2)').textContent}`)) || 0;
+    const thumbColor = localStorage.getItem(`thumbColor_thumb-down_${thumbDownIcon.closest('tr').querySelector('td:nth-child(2)').textContent}`) || 'black';
+
+    if (ifToggled === 1) {
+      thumbDownIcon.classList.add('clicked');
+    }
+    thumbDownIcon.style.color = thumbColor;
+
+    // Retrieve upvote count from localStorage and update the UI
+    const savedUpvoteCount = localStorage.getItem(`upvoteCount_${thumbDownIcon.closest('tr').querySelector('td:nth-child(2)').textContent}`);
+    if (savedUpvoteCount !== null) {
+      thumbDownIcon.closest('tr').querySelector('.upvote-count').innerText = savedUpvoteCount;
+    }
+  });
+
+  thumbUpIcons.forEach((thumbUpIcon) => {
+    thumbUpIcon.addEventListener('click', function (event) {
+      event.preventDefault();
+      handleUpvoteClick(this, 'up');
+    });
+  });
+
+  thumbDownIcons.forEach((thumbDownIcon) => {
+    thumbDownIcon.addEventListener('click', function (event) {
+      event.preventDefault();
+      handleUpvoteClick(this, 'down');
+    });
+  });
+});
+
+</script>
+{% endblock %}

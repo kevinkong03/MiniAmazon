@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if current_user.is_authenticated %}
+<div style="padding-left: 10px; padding-right: 10px; padding-bottom: 20px">
+  <div class="orders-and-add">
+    <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="{{ url_for('orders.user_order_history') }}">My Orders</a>
+    <div class="dropdown">
+      <button class="dropbtn btn btn-primary">+ Add Product</button>
+      <div class="dropdown-content">
+        <a href="{{ url_for('inventory.add_product_item') }}">Existing</a>
+        <a href="{{ url_for('inventory.add_new_item') }}">New</a>
+      </div>
+    </div>
+  </div>
+  <br>
+  <h2>My Inventory:</h2>
+
+  <div class="sorting">
+    <form method="GET" action="{{ url_for('inventory.inventory_items') }}">
+      <div class="d-flex" style="gap: 20px;">
+          <label for="keyWord">Search By Keyword:</label>
+          <input type="text" name="keyWord" value="{{ form.keyWord.data }}" size="32">
+      </div>
+      <input type="submit" value="Apply" class="btn btn-secondary">
+    </form>
+  </div>
+
+  <!-- HTML for individual inventory cards -->
+  <div class="card-container">
+    {% for product in products%}
+    <div class="card">
+      <div class="picture">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{product.name}} Image" width="200" height="200" style="object-fit: contain;">
+      </div>
+      <a class="name" href="{{ url_for('inventory.edit_inventory_item', pid=product.pid) }}" style="word-break: normal;">
+        {{product.name}}
+      </a>
+      <p class="price">${{'%0.2f'|format(product.unit_price|float)}}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination controls -->
+  <div style="display: flex; justify-content: center;">
+    <div id="pagination-container">
+      {{ pagination.links }}
+    </div>
+  </div>
+
+  <br>
+  <!-- Pagination styling -->
+  <style>
+    #pagination-container .pagination .active .page-link {
+      background-color: #f0f8ff;
+      color: black; /* Change the text color to white for better contrast */
+    }
+
+    #pagination-container .pagination .page-link {
+      color: black; /* Change the text color to white for better contrast */
+    }
+
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 10px;
+      padding: 20px;
+    }
+
+    .orders-and-add {
+      float: right
+    }
+
+    .card {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      width: 250px;
+      margin: 10px;
+      padding-top: 25px;
+      text-align: center;
+      word-wrap: break-word;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: arial;
+      min-height: 350px;
+    }
+    .name {
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;  
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+      padding: 0 10px;
+      margin-bottom: 30px;
+    }
+
+    .price {
+      color: grey;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .rating {
+      color: grey;
+      font-size: 15px;
+      text-align: center;
+      margin-left: 10px;
+      margin-bottom: 10px;
+    }
+
+    .cat{
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .dropbtn {
+      background-color: #000000;
+      color: white;
+      font-size: 16px;
+      border-color: black;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f1f1f1;
+      min-width: 127px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1;
+    }
+
+    .dropdown-content a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .dropdown-content a:hover {background-color: #ddd;}
+
+    .dropdown:hover .dropdown-content {display: block;}
+
+    .dropdown:hover .dropbtn {background-color: #3e8e41; border-color: #3e8e41;}
+  </style>
+</div>
+
+
+{% else %}
+
+<p><a href="{{ url_for('users.login') }}">Log in</a> to see your inventory!</p>
+{% endif %}
+
+{% endblock %}

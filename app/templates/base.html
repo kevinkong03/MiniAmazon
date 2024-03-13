@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Mini Amazon</title>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+  <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/example.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    body {
+      font-family: "Lato", sans-serif;
+    }
+
+    .main-head {
+      height: 150px;
+      background: #FFF;
+      height: 150px;
+      background: #34c15c;
+    }
+
+    .sidenav {
+      height: 100%;
+      /* background-color: #000; */
+      overflow-x: hidden;
+      /* padding-top: 20px; */
+    }
+
+    .main {
+      padding: 0px 10px;
+    }
+
+    .login-main-text {
+      margin-top: 20%;
+      padding: 60px;
+      color: #fff;
+    }
+
+    .login-main-text h2 {
+      font-weight: 300;
+    }
+
+    .btn-black {
+      background-color: #000 !important;
+      color: #fff;
+    }
+
+    ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #edae6f;
+    }
+
+    li {
+      float: left;
+    }
+
+    li a {
+      display: block;
+      width: 100px;
+      color: black;
+      text-align: center;
+      padding: 15px;
+      text-decoration: none;
+    }
+
+    li a:hover {
+      text-decoration: underline;
+      color: black;
+    }
+
+    .btn-black:hover {
+      background-color: black !important;
+      color: white;
+    }
+
+    .icon-bar a {
+      float: left;
+      text-align: center;
+      width: 20%;
+      padding: 12px 0;
+      transition: all 0.3s ease;
+      color: white;
+      font-size: 36px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="sidenav">
+    <ul>
+      <li><a href="{{ url_for('index.index') }}">Products</a></li>
+      <li><a href="{{ url_for('inventory.inventory_items') }}">Inventory</a></li>
+      <li style="float:right"><a class="icon-bar" class="active" href="{{ url_for('account.account') }}"><i
+            class="fa fa-fw fa-user"></i></a></li>
+      <li style="float:right"><a class="icon-bar" class="active" href="{{ url_for('cart.cart_items') }}"><i
+            class="fa fa-shopping-cart"></i></a></li>
+
+    </ul>
+    {% block msg %}
+    <div style="text-align: right; margin-bottom: 25px; margin-top: 5px; margin-right: 10px;">
+      {% if current_user.is_authenticated %}
+      Hello {{current_user.firstname}}! <a href="{{ url_for('users.logout') }}" type="button" class="btn btn-black">Log
+        out</a>
+      {% endif %}
+    </div>
+    {% endblock %}
+  </div>
+  <div class="flashwrapper" style="padding-left: 20px;
+  padding-right: 20px;">
+    {% if current_user.is_authenticated %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class=flashes>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+          </ul>
+          <style>
+            .flashes {
+              background-color: white;
+            }
+
+            .error {
+              color: red
+            }
+          </style>
+        {% endif %}
+      {% endwith %}
+    {% endif %}
+  </div>
+  <div class="main">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

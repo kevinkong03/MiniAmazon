@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+<h2>Orders:</h2>
+
+<table class='table table-hover table-bordered container'>
+  <thead>
+    <tr>
+        <th scope="col">Order Date</th>
+        <th scope="col" class="text-center">Total Items</th>
+        <th scope="col" class="text-center">Total Cost</th>
+        <th scope="col" class="text-center">Fulfillment Status</th>
+        <th scope="col" class="text-center">See Additional Info</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in orders%}
+      <tr>
+        <th scope="row">{{order.order_date}}</th>
+        <td class="text-center">{{order.total_quantity}}</td>
+        <td class="text-center">${{'%0.2f'|format(order.subtotal|float)}}</td>
+        <td class="d-flex justify-content-center">
+          {% if order.order_status %}
+            <div class="fulfill" style="color: green; border: 1px solid green;">Fulfilled</div>
+          {% else %}
+            <div class="fulfill" style="color: red; border: 1px solid red;">Unfulfilled</div>
+          {% endif %}
+        </td>
+        <td class="text-center"><a href="{{ url_for('orders.user_order_details', order_id=order.order_id) }}">View Details</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div style="display: flex; justify-content: center;">
+  <div id="pagination-container">
+    {{ order_pagination.links }}
+  </div>
+</div>
+
+<br><br>
+<h2 style="padding-left: 10px;" >Buy Again:</h2>
+<!-- container for previously bought items -->
+<div class="card-container">
+  {% for product in buy_again%}
+  <div class="card">
+    <div class="picture">
+      <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{product.name}} Image" width="200" height="200" style="object-fit: contain;">
+    </div>
+    <a class="name" href="{{url_for('productView.productView', pid=product.pid)}}" style="word-break: normal;">
+      {{product.name}}
+    </a>
+    <p class="price">${{'%0.2f'|format(product.unit_price|float)}}</p>
+  </div>
+  {% endfor %}
+</div>
+<div style="display: flex; justify-content: center; margin-bottom: 10px;">
+  <div id="pagination-container">
+    {{ buy_again_pagination.links }}
+  </div>
+</div>
+
+<style>
+  .table td, .table th {
+    border-left: none;
+    border-right: none;
+  }
+  .table {
+    border-left: none;
+    border-right: none;
+  }
+  .table thead {
+    border-top: 2.5px solid black;
+    border-bottom: 2.5px solid black;
+  }
+  .fulfill {
+    width: 100px;
+    padding: 5px;
+    border-radius: 20px;
+    display: flex; 
+    justify-content: center; 
+  }
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 10px;
+    padding: 20px;
+  }
+
+  .card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    width: 250px;
+    margin: 10px;
+    padding-top: 25px;
+    text-align: center;
+    word-wrap: break-word;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: arial;
+    min-height: 350px;
+  }
+
+  .name {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    padding: 0 10px;
+    margin-bottom: 30px;
+  }
+  .price {
+      color: grey;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+</style>
+
+<!-- Pagination controls -->
+
+
+<!-- Pagination styling -->
+<style>
+  #pagination-container .pagination .active .page-link {
+    background-color: #f0f8ff;
+    color: black; /* Change the text color to white for better contrast */
+  }
+  #pagination-container .pagination .page-link {
+    color: black; /* Change the text color to white for better contrast */
+  }
+</style>
+
+{% else %}
+<p><a href="{{ url_for('users.login') }}">Log in</a> to see your orders!</p>
+{% endif %}
+
+
+{% endblock %}

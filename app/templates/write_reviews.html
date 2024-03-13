@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-left: 10px; padding-right: 10px;">
+  <br>
+  <button class="btn btn-primary" style="background-color: black; color: white; border-color: black; height: 38px;" onclick="window.history.back()">Back</button>
+  <br><br>
+  <h2>Write a Review</h2>
+
+  <!-- Overall Rating with Stars -->
+  <div class="small-break"></div>
+
+  <!-- Review Form -->
+  <form method="POST" action="{{ url_for('write_reviews.submit_review',uid=uid) }}">
+    <!-- Form fields for seller name, rating, review title, and review content -->
+    <div class="form-group">
+      <h5>Seller Name</h5>
+      <label for="sellerName">{{seller_name}}</label>
+    
+    </div>    
+    <div class="star-rating" id="starRating" style="display: flex; flex-direction: row-reverse; justify-content: flex-end;">
+      <i class="fa fa-star" data-rating="5"></i>
+      <i class="fa fa-star" data-rating="4"></i>
+      <i class="fa fa-star" data-rating="3"></i>
+      <i class="fa fa-star" data-rating="2"></i>
+      <i class="fa fa-star" data-rating="1"></i>
+    </div>
+    <input type="hidden" id="rating" name="rating" value="0"> <!-- Hidden input field for the rating -->
+    <div class="small-break"></div>
+    <div class="form-group">
+      <label for="reviewTitle">Review Title</label>
+      <input type="text" class="form-control" id="reviewTitle" name="reviewTitle" placeholder="Enter review title">
+    </div>
+    <div class="form-group">
+      <label for="reviewContent">Review Content</label>
+      <textarea class="form-control" id="reviewContent" name="reviewContent" rows="5" placeholder="Write your review here"></textarea>
+    </div>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-primary" style="background-color: black; color: white; border-color: black; height: 40px;" type="submit">Post</button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .star-rating .fa-star.hover,
+  .star-rating .fa-star.hover ~ .fa-star {
+    color: gold;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const stars = document.querySelectorAll(".star-rating i");
+    const starRating = document.getElementById("starRating");
+    const ratingInput = document.getElementById("rating");
+
+    stars.forEach((star) => {
+      star.addEventListener("click", function () {
+        const rating = this.getAttribute("data-rating");
+
+        // Remove the 'hover' class from all stars
+        stars.forEach((s) => s.classList.remove("hover"));
+
+        // Add the 'hover' class to the clicked star and stars to its left
+        for (let i = 1; i <= rating; i++) {
+          starRating.querySelector(`[data-rating="${i}"]`).classList.add("hover");
+        }
+
+        // Set the rating value in the hidden input field
+        ratingInput.value = rating;
+      });
+    });
+  });
+</script>
+
+{% endblock %}

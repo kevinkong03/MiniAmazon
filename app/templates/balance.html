@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if current_user.is_authenticated %}
+<div style="padding-left: 10px;">
+    <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;"
+        href="/account">Back</a>
+    <br><br>
+    <h2>Your Balance</h2>
+    <br>
+    <strong><u>Your Current Balance</u>:</strong> ${{ '%0.2f'|format(current_balance | float)|default("0.00") }}
+    <br><br>
+
+    <form method="POST" action="{{ url_for('account.balance') }}">
+        {{ form.hidden_tag() }}
+        <p>
+            Withdraw ${{ form.withdraw_val(style='width: 100px;') }}
+            <input type="submit" id="p" name="withdraw" class="btn btn-warning" min="0.01" step="0.01" onchange="(function(el){el.value=parseFloat(el.value).toFixed(2);})(this)" style="width: 80px;" required step="0.01">
+        </p>
+    </form>
+
+    <form method="POST" action="{{ url_for('account.balance') }}">
+        {{ form.hidden_tag() }}
+        <p>
+            Reload ${{ form.reload_val(style='width: 100px;') }}
+            <input type="submit" name="reload" value="Reload" class="btn btn-success"  step="0.01">
+        </p>
+    </form>
+
+    <br><br>
+    <strong><u>Balance History Visualization</u>:</strong>
+
+    <div class="tab" style="margin-left: -5px;">
+        <button class="tablinks" data-page="{{pagination.page}}" onclick="openPage(event, 'Table')">Balance History Table</button>
+        <button class="tablinks" onclick="openPage(event, 'Graph')">Graph of Average Monthly Balances for this Year</button>
+    </div>
+        
+    <div id="Table" class="tabcontent" style="display: none;">
+        
+        <br><br>
+        <table class='table table-hover table-bordered container'>
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Balance</th>
+                    <th scope="col">Transaction Type</th>
+                    <th scope="col">Related Order ID if Applicable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if balance_history %}
+                    {% for entry in balance_history %}
+                        <tr>
+                            <td>{{ entry.timestamp }}</td>
+                            <td>${{ '%0.2f'|format(entry.amount | float) }}</td>
+                            <td>{{ entry.transaction }}</td>
+                            {% if entry.related_order_id %}
+                                <td><a href="{{ url_for('orders.user_order_details', order_id=entry.related_order_id) }}">View Details</a></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                
+                {% endif %}
+            </tbody>
+        </table>
+
+        
+        <!-- Pagination controls -->
+        <div style="display: flex; justify-content: center;">
+            <div id="pagination-container">
+                {{ pagination.links }}
+            </div>
+        </div>
+        
+        <!-- Pagination styling -->
+        <style>
+            #pagination-container .pagination .active .page-link {
+                background-color: #f0f8ff;
+                color: black;
+                /* Change the text color to white for better contrast */
+            }
+        
+            #pagination-container .pagination .page-link {
+                color: black;
+                /* Change the text color to white for better contrast */
+            }
+        </style>
+    </div>
+
+
+    <div id="Graph" class="tabcontent" style="display: none;">
+        
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+            
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            
+            <script>
+                const ctx = document.getElementById('myChart');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: {{months | tojson | safe}},
+                        datasets: [{
+                            label: 'Average Monthly Balance for this Year',
+                            data: {{average_amounts | tojson | safe}},
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            </script>
+    </div>
+</div>
+
+<script>
+    function openPage(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    
+    // Hide all tab content
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    
+    // Remove the "active" class from all tab buttons
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    
+    // Show the selected tab content
+    document.getElementById(tabName).style.display = "block";
+    
+    // Add the "active" class to the clicked tab button
+    evt.currentTarget.className += " active";
+
+    // Store the current tab in local storage
+    localStorage.setItem('activeTab', tabName);
+    }
+
+    window.onload = function() {
+    // Get the active tab from local storage
+    var activeTab = localStorage.getItem('activeTab');
+
+    // If there is no active tab in local storage, set "purchases" as the default tab
+    if (activeTab === null) {
+        activeTab = "Table";
+    }
+
+    // Set the active tab
+    document.getElementById(activeTab).style.display = "block";
+
+    // Set the active class to the correct tab button
+    var tablinks = document.getElementsByClassName("tablinks");
+    for (var i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].getAttribute('onclick').includes(activeTab)) {
+        tablinks[i].className += " active";
+        }
+    }
+
+    // Hide "Unfulfilled" tab content when other tabs are active
+    if (activeTab !== "Table") {
+        document.getElementById("Table").style.display = "none";
+    }
+    }
+</script>
+
+
+
+{% else %}
+<p><a href="{{ url_for('users.login') }}">Log in</a> to see your balance!</p>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if current_user.is_authenticated %}
+  <a class="btn btn-primary" style="background-color: black; color: white; border-color: black;" href="/inventory">Cancel</a>
+  <br><br>
+  <div style="padding-left: 10px; padding-right: 10px; padding-bottom: 20px">
+  <h2>{{ item.name }}</h2>
+
+  <!-- product image -->
+  <div class="picture">
+    <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{url_for('static', filename='unavailableImage.jpeg')}}" width="200" height="200" style="object-fit: contain;" onerror="this.onerror=null; this.src=this.alt;">      
+  </div>
+
+    <div class="d-flex" style="gap: 20px;">
+      <!-- update item details form -->
+      <div class="card-container">
+        <div class="card">
+          <div class="text">
+            <h4>Product Details</h4>
+            <form action="{{ url_for('inventory.item_update_details', pid=item.pid, seller_id=item.seller_id)}}" method="POST" enctype="multipart/form-data">
+              <fieldset>
+                {% if is_creator %}
+                <!-- upload image -->
+                <div>
+                  <label for="image">Upload Image:</label>
+                  <input type="file" id="image" name="image" accept="image/jpg" value="{{ item.image }}" required>
+                {% endif %}
+                <!-- adjust quantity -->
+                <div>
+                  <label for="quantity">Quantity:</label>
+                  <input type="number" id="q" name="quantity" min="1" max="{{ item.max_quantity }}" value="{{ item.quantity }}" style="width: 50px;" required>
+                </div>
+              
+                <!-- adjust unit price -->
+                <div>
+                  <label for="unit_price">Unit Price ($):</label>
+                  <input type="number" id="p" name="unit_price" min="0.01" value="{{ item.unit_price }}" step="0.01" onchange="(function(el){el.value=parseFloat(el.value).toFixed(2);})(this)" style="width: 80px;" required step="0.01">
+                </div>
+
+                {% if is_creator %}
+                <!-- adjust description -->
+                <div>
+                  <label for="description">Description:</label>
+                  <textarea id="description" name="description" rows="10" cols="60" maxlength="100000" value="{{ item.description }}" required>{{ item.description }}</textarea>
+                </div>
+
+                <!-- adjust category -->
+                <div>
+                  <label for="category">Category:</label>
+                  <select name="category" id="c" required>
+                    {% for category in categories %}
+                    <option value="{{ category.name }}">{{ category.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                {% endif %}
+                
+              </fieldset>
+              <button type="submit" style="background-color: black; color: white; cursor: pointer; border-radius: 30px; padding: 5px 10px; float: right; margin-right: 15px">Update</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- delete product -->
+<br>
+<form action="{{ url_for('inventory.item_delete', pid=item.pid, seller_id=item.seller_id)}}" method="POST">
+<button type="submit" style="background-color: whitesmoke; color: red; border-color: gray; cursor: pointer; border-radius: 30px; padding: 5px 10px;">Remove Product</button>
+</form>
+
+  {% else %}
+  
+  <!-- if not logged in, ask user to log in -->
+  <p><a href="{{ url_for('users.login') }}">Log in</a> to update inventory item!</p>
+  {% endif %}
+
+  <!-- Page styling -->
+  <style>
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: column;
+      align-content: flex-start;
+      margin-top: 15px;
+    }
+
+    .card {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      width: 800px;
+      padding-top: 10px;
+      text-align: left;
+      word-wrap: break-word;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: arial;
+    }
+
+    .text {
+        margin-left: 20px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+    }
+
+    label {
+    display: inline-block;
+    width: 120px;
+    margin-right: 0px;
+    text-align:left;
+    margin-left: -138px;
+    }
+
+    fieldset {
+    border:none;
+    width:500px;
+    margin:0px auto;
+    }
+    
+    textarea {
+      vertical-align: top;
+      margin-bottom: 5px;
+    }
+
+  </style>
+</div>
+
+{% endblock %}

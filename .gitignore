@@ -1,0 +1,9 @@
+**/*~
+**/__pycache__
+**/.venv
+/db/generated/*.csv
+poetry.lock
+
+/app/static/images
+
+.flaskenv
